@@ -346,6 +346,10 @@ public class DicomCleaner extends ApplicationFrame {
 
 	protected String ourCalledAETitle;		// set when reading network properties; used not just in StorageSCP, but also when creating exported meta information headers
 	
+	public SafeProgressBarUpdaterThread getProgressBarUpdater() {
+		return progressBarUpdater;
+	}
+	
 	protected void setCurrentRemoteQueryInformationModel(String remoteAEForQuery) {
 		currentRemoteQueryInformationModel=null;
 		String stringForTitle="";
@@ -1070,7 +1074,7 @@ slf4jlogger.info("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): epoc
 				GoogleAPIClient client = GoogleAPIClientFactory.getInstance().getGoogleClient();
 				client.signIn();
 				JFrame frame = new JFrame();
-				GoogleDicomstoreSelector googleChooser = new GoogleDicomstoreSelector(frame);
+				GoogleDicomstoreSelector googleChooser = new GoogleDicomstoreSelector(frame, DicomCleaner.this, false);
 				frame.add(googleChooser);
 				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 				frame.setVisible(true);
@@ -1083,6 +1087,10 @@ slf4jlogger.info("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): epoc
 		}
 	}
 
+	public void importDirectory(String path) {
+		new Thread(new ImportWorker(path,srcDatabase,srcDatabasePanel)).start();
+	}
+	
 	protected class ImportActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent event) {
 			try {
@@ -1211,6 +1219,30 @@ slf4jlogger.info("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): epoc
 			logger.sendLn("Export complete");
 			ApplicationEventDispatcher.getApplicationEventDispatcher().processEvent(new StatusChangeEvent("Done exporting to "+exportDirectory));
 			cursorChanger.restoreCursor();
+		}
+	}
+	
+	public Vector getCurrentDestinationFilePathSelections() {
+		return currentDestinationFilePathSelections;
+	}
+
+	protected class ExportToGoogleActionListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				GoogleAPIClient client = GoogleAPIClientFactory.getInstance().getGoogleClient();
+				client.signIn();
+				JFrame frame = new JFrame();
+				GoogleDicomstoreSelector googleChooser = new GoogleDicomstoreSelector(frame, DicomCleaner.this, true);
+				frame.add(googleChooser);
+				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				frame.setVisible(true);
+				frame.setResizable(false);
+				frame.setSize(350, 300);
+			} catch(Exception ex) {
+				logger.send("Error during fetching data from Google:" + ex.getMessage());
+				JOptionPane.showMessageDialog(null, "Error during fetching data from Google:" + ex.getMessage());
+			}
 		}
 	}
 
@@ -1939,6 +1971,13 @@ System.err.println("properties="+properties);
 			exportButton.addActionListener(new ExportActionListener());
 		}
 		
+		{
+			JButton exportToGoogleButton = new JButton(resourceBundle.getString("exportToGoogleButtonLabelText"));
+			exportToGoogleButton.setToolTipText(resourceBundle.getString("exportToGoogleButtonToolTipText"));
+			buttonPanel.add(exportToGoogleButton);
+			exportToGoogleButton.addActionListener(new ExportToGoogleActionListener());
+		}
+
 		{
 			JButton sendButton = new JButton(resourceBundle.getString("sendButtonLabelText"));
 			sendButton.setToolTipText(resourceBundle.getString("sendButtonToolTipText"));
