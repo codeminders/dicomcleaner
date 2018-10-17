@@ -122,6 +122,17 @@ public class GoogleAPIClient {
     }
 
     public void signIn() throws Exception {
+    	if (!isSignedIn) {
+    		try {
+    			signInInternal();
+    		} catch(Exception e) {
+        		DATA_STORE_DIR.delete();
+        		signInInternal();
+    		}
+    	}
+    }
+
+    private void signInInternal() throws Exception {
         if (!isSignedIn) {
             int tryCount = 0;
             Exception error;

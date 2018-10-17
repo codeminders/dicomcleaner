@@ -8,8 +8,11 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.pixelmed.display.DicomCleaner;
+import com.pixelmed.display.SafeProgressBarUpdaterThread;
 import com.pixelmed.slf4j.Logger;
 import com.pixelmed.slf4j.LoggerFactory;
 
@@ -18,11 +21,13 @@ public class GoogleDICOMImport {
     private final static Logger logger = LoggerFactory.getLogger(GoogleDICOMImport.class);
 
     private GoogleAPIClient googleAPIClient;
+    private DicomCleaner dicomCleaner;
     
     private static int TEMP_DIR_ATTEMPTS = 3;
     
-    public GoogleDICOMImport(GoogleAPIClient googleAPIClient) {
+    public GoogleDICOMImport(GoogleAPIClient googleAPIClient, DicomCleaner dicomCleaner) {
     	this.googleAPIClient = googleAPIClient;
+    	this.dicomCleaner = dicomCleaner;
 	}
     
 	public static File createTempDir() {
@@ -114,11 +119,22 @@ public class GoogleDICOMImport {
 	}
 
 	private List<String> downloadFile(List<String> fileURLs, String saveDir) {
-		return fileURLs.stream().map(url -> downloadFile(url, saveDir)).collect(Collectors.toList());
+		try {
+		SafeProgressBarUpdaterThread.startProgressBar(dicomCleaner.getProgressBarUpdater());
+		dicomCleaner.getProgressBarUpdater().updateProgressBar(0, fileURLs.size());
+		final AtomicInteger count = new AtomicInteger(0);
+		return fileURLs.stream().map(url -> {
+			dicomCleaner.getProgressBarUpdater().updateProgressBar(count.incrementAndGet());
+			return downloadFile(url, saveDir);
+			}).collect(Collectors.toList());
+		} finally {
+			SafeProgressBarUpdaterThread.endProgressBar(dicomCleaner.getProgressBarUpdater());
+		}
 	}
 
-	public List<String> downloadFile(DICOMStoreDescriptor descriptor) {
+	public File downloadFileIntoTempDir(DICOMStoreDescriptor descriptor) {
 		File tempDir = createTempDir();
-		return downloadFile(googleAPIClient.listDCMFileIds(descriptor), tempDir.getAbsolutePath());
+		downloadFile(googleAPIClient.listDCMFileIds(descriptor), tempDir.getAbsolutePath());
+		return tempDir;
 	}
 }

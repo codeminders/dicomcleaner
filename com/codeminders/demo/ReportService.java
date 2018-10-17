@@ -15,7 +15,9 @@ import com.pixelmed.slf4j.Logger;
 import com.pixelmed.slf4j.LoggerFactory;
 
 public class ReportService {
-	
+
+	public enum Status { SUCCESS, FAIL };
+
 	public static final String REPORT_FILE = "report.html";
 	private static final Logger logger = LoggerFactory.getLogger(ReportService.class);
 
@@ -59,7 +61,7 @@ public class ReportService {
     	dumpReport();
     }
 
-    public void addExported(String exported, String info) {
+    public void addExported(String exported, Status status, String info) {
     	exportedFiles.put(exported, info);
     	dumpReport();
     }
