@@ -85,7 +85,7 @@ public class GoogleDICOMExport {
 	}
 
 	private Status reportStatus(File file, Status status) {
-		ReportService.getInstance().addExported(file.getAbsolutePath(), status, "");
+		ReportService.getInstance().addExported(file.getAbsolutePath(), status);
 		return status;
 	}
 

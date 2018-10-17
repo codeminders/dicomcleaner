@@ -2,6 +2,8 @@
 
 package com.pixelmed.display;
 
+import com.codeminders.demo.ReportService;
+import com.codeminders.demo.ReportService.Status;
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.CodedSequenceItem;
@@ -553,6 +555,11 @@ public class DicomImageBlackout extends JFrame  {
 			loadDicomFileOrDirectory(currentFile);
 			slf4jlogger.info("SaveActionListener.actionPerformed(): total time including reload for display = {}",(System.currentTimeMillis() - startTime));
 			cursorChanger.restoreCursor();
+			if (success) {
+				ReportService.getInstance().addPixelAnonymized(newFile.getName(), Status.SUCCESS);
+			} else {
+				ReportService.getInstance().addPixelAnonymized(newFile.getName(), Status.FAIL);
+			}
 		}
 	}
 	

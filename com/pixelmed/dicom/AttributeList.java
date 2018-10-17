@@ -228,7 +228,7 @@ public class AttributeList extends TreeMap<AttributeTag,Attribute> {
 			}
 		}
 		if (encounteredIncorrectImplicitVRElementEncodinginExplicitVR && vl > maximumSaneFixedValueLengthWhenRecoveringFromIncorrectImplicitVRElementEncodinginExplicitVR) {
-			throw new DicomException("Unlikely fixed VL ("+vl+" dec, 0x"+Long.toHexString(vl)+") when recovering from incorrect Implicit VR element encoding in Explicit VR Transfer Syntax - giving up");
+			//throw new DicomException("Unlikely fixed VL ("+vl+" dec, 0x"+Long.toHexString(vl)+") when recovering from incorrect Implicit VR element encoding in Explicit VR Transfer Syntax - giving up");
 		}
 		// otherwise can be as large as it needs to be
 	}

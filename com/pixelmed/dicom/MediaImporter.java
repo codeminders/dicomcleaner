@@ -6,6 +6,8 @@ import com.pixelmed.utils.FileUtilities;
 import com.pixelmed.utils.MessageLogger;
 import com.pixelmed.utils.PrintStreamMessageLogger;		// used in main method for testing
 import com.pixelmed.utils.ThreadUtilities;
+import com.codeminders.demo.ReportService;
+import com.codeminders.demo.ReportService.Status;
 import com.pixelmed.display.DialogMessageLogger;		// used in main method for testing
 import com.pixelmed.display.SafeFileChooser;
 import com.pixelmed.display.SafeProgressBarUpdaterThread;
@@ -311,9 +313,11 @@ public class MediaImporter {
 						}
 						if (goodToGo) {
 							//logLn("Is a suitable DICOMDIR referenced file: "+mediaFileName);
+							ReportService.getInstance().addImported(mediaFileName, Status.SUCCESS);
 							doSomethingWithDicomFileOnMedia(mediaFileName,transferSyntaxUID,sopClassUID);
 						}
 						else {
+							ReportService.getInstance().addImported(mediaFileName, Status.FAIL);
 							//logLn("Not a suitable DICOMDIR referenced file: "+mediaFileName);
 							doSomethingWithUnwantedFileOnMedia(mediaFileName,transferSyntaxUID,sopClassUID);
 						}

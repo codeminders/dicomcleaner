@@ -5,6 +5,9 @@ package com.pixelmed.display;
 import com.codeminders.demo.GoogleAPIClient;
 import com.codeminders.demo.GoogleAPIClientFactory;
 import com.codeminders.demo.GoogleDicomstoreSelector;
+import com.codeminders.demo.ReportPanel;
+import com.codeminders.demo.ReportService;
+import com.codeminders.demo.ReportService.Status;
 import com.pixelmed.database.DatabaseInformationModel;
 import com.pixelmed.database.DatabaseTreeBrowser;
 import com.pixelmed.database.DatabaseTreeRecord;
@@ -901,12 +904,14 @@ slf4jlogger.info("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): epoc
 //currentTime = System.currentTimeMillis();
 //System.err.println("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): inserting cleaned object in database took = "+(currentTime-startTime)+" ms");
 //startTime=currentTime;
+						ReportService.getInstance().addAnonymized(dicomFileName, Status.SUCCESS);
 					}
 					catch (Exception e) {
 						System.err.println("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): while cleaning "+dicomFileName);
 						slf4jlogger.error("Cleaning failed for "+dicomFileName,e);
 						logger.sendLn("Cleaning failed for "+dicomFileName+" because "+e.toString());
 						success = false;
+						ReportService.getInstance().addAnonymized(dicomFileName, Status.FAIL);
 					}
 				}
 				SafeProgressBarUpdaterThread.updateProgressBar(progressBarUpdater,j+1);
@@ -1269,7 +1274,25 @@ slf4jlogger.info("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): epoc
 			}
 		}
 	}
-	
+
+	protected class ReportActionListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				JFrame frame = new JFrame();
+				ReportPanel reportPanel = ReportPanel.getInstance();
+				frame.add(reportPanel);
+				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				frame.setVisible(true);
+				frame.setResizable(false);
+				frame.setSize(200, 500);
+			} catch(Exception ex) {
+				logger.send("Error during report building:" + ex.getMessage());
+				JOptionPane.showMessageDialog(null, "Error during report building:" + ex.getMessage());
+			}
+		}
+	}
+
 	protected class OurMultipleInstanceTransferStatusHandler extends MultipleInstanceTransferStatusHandlerWithFileName {
 		int nFiles;
 		MessageLogger logger;
@@ -1976,6 +1999,13 @@ System.err.println("properties="+properties);
 			exportToGoogleButton.setToolTipText(resourceBundle.getString("exportToGoogleButtonToolTipText"));
 			buttonPanel.add(exportToGoogleButton);
 			exportToGoogleButton.addActionListener(new ExportToGoogleActionListener());
+		}
+
+		{
+			JButton reportButton = new JButton(resourceBundle.getString("reportButtonLabelText"));
+			reportButton.setToolTipText(resourceBundle.getString("reportButtonToolTipText"));
+			buttonPanel.add(reportButton);
+			reportButton.addActionListener(new ReportActionListener());
 		}
 
 		{
