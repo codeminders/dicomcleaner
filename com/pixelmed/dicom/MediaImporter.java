@@ -385,10 +385,12 @@ public class MediaImporter {
 							i.close();	// do this BEFORE calling the handler, just in case
 							if (goodToGo) {
 								//logLn("Is a DICOM file that is wanted: "+mediaFile);
+								ReportService.getInstance().addImported(mediaFile.getName(), Status.SUCCESS);
 								doSomethingWithDicomFileOnMedia(mediaFile.getPath(),transferSyntaxUID,sopClassUID);
 							}
 							else {
 								//logLn("Not a DICOM PS 3.10 file or not one that is wanted: "+mediaFile);
+								ReportService.getInstance().addImported(mediaFile.getName(), Status.FAIL);
 								doSomethingWithUnwantedFileOnMedia(mediaFile.getPath(),transferSyntaxUID,sopClassUID);
 							}
 						}

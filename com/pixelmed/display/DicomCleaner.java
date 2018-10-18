@@ -729,6 +729,7 @@ public class DicomCleaner extends ApplicationFrame {
 	protected class PurgeActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent event) {
 			try {
+				ReportService.getInstance().clear();
 				activeThread = new Thread(new PurgeWorker());
 				activeThread.start();
 			} catch (Exception e) {
@@ -1285,7 +1286,7 @@ slf4jlogger.info("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): epoc
 				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 				frame.setVisible(true);
 				frame.setResizable(false);
-				frame.setSize(200, 500);
+				frame.setSize(200, 550);
 			} catch(Exception ex) {
 				logger.send("Error during report building:" + ex.getMessage());
 				JOptionPane.showMessageDialog(null, "Error during report building:" + ex.getMessage());

@@ -41,6 +41,14 @@ public class ReportService {
     private ReportService() {
     	dumpReport("");
     }
+    
+    public void clear() {
+        downloaded.clear();
+        importedFiles.clear();
+        anonymizedFiles.clear();
+        pixelAnonymizedFiles.clear();
+        exportedFiles.clear();
+    }
 
     public void addDownloaded(String url) {
     	downloaded.add(url);
@@ -111,7 +119,10 @@ public class ReportService {
 	    		ps.println(str + "  STATUS: " + importedFiles.get(str) + "<br>");
 	    	});
     	}
-    	ps.print("<b>TOTAL:" + importedFiles.size() + "</b><br><br>");
+    	long successCount = importedFiles.values().stream().filter(st -> st.equals(Status.SUCCESS)).count();
+    	ps.println("<b>TOTAL SUCCESS:" + successCount + "</b><br>");
+    	ps.println("<b>TOTAL FAIL:" + (importedFiles.size() - successCount) + "</b><br>");
+    	ps.println("<b>TOTAL:" + importedFiles.size() + "</b><br><br>");
     	
     	//REPORT for anonymizer
     	ps.println("<b>Files anonymized:</b><br>");
@@ -120,7 +131,7 @@ public class ReportService {
 	    		ps.println(str + ":" + anonymizedFiles.get(str) + "<br>");
 	    	});
     	}
-    	long successCount = anonymizedFiles.values().stream().filter(st -> st.equals(Status.SUCCESS)).count();
+    	successCount = anonymizedFiles.values().stream().filter(st -> st.equals(Status.SUCCESS)).count();
     	ps.println("<b>TOTAL SUCCESS:" + successCount + "</b><br>");
     	ps.println("<b>TOTAL FAIL:" + (anonymizedFiles.size() - successCount) + "</b><br>");
     	ps.println("<b>TOTAL:" + anonymizedFiles.size() + "</b><br><br>");
