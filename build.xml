@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="dist" name="Create Runnable Jar for Project dicomcleaner with Jar-in-Jar Loader">
+
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.8"/>
+    <property name="source" value="1.8"/>
+    <path id="dicomcleaner.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="lib/additional/aiviewer.jar"/>
+        <pathelement location="lib/additional/commons-codec-1.3.jar"/>
+        <pathelement location="lib/additional/commons-compress-1.12.jar"/>
+        <pathelement location="lib/additional/commons-net-ftp-2.0.jar"/>
+        <pathelement location="lib/additional/hsqldb.jar"/>
+        <pathelement location="lib/additional/javax.json-1.0.4.jar"/>
+        <pathelement location="lib/additional/javax.json-api-1.0.jar"/>
+        <pathelement location="lib/additional/jmdns.jar"/>
+        <pathelement location="lib/additional/pixelmed_codec.jar"/>
+        <pathelement location="lib/additional/pixelmed_imageio.jar"/>
+        <pathelement location="lib/additional/vecmath1.2-1.14.jar"/>
+        <pathelement location="lib/junit/junit-4.8.1.jar"/>
+        <pathelement location="lib/additional/slf4j-simple-1.7.25.jar"/>
+        <pathelement location="lib/additional/slf4j-api-1.7.25.jar"/>
+        <pathelement location="lib/additional/google-oauth-client-1.25.0.jar"/>
+        <pathelement location="lib/additional/google-oauth-client-java6-1.25.0.jar"/>
+        <pathelement location="lib/additional/google-oauth-client-jetty-1.25.0.jar"/>
+        <pathelement location="lib/additional/google-api-client-1.25.0.jar"/>
+        <pathelement location="lib/additional/google-http-client-1.25.0.jar"/>
+        <pathelement location="lib/additional/google-http-client-jackson2-1.25.0.jar"/>
+        <pathelement location="lib/additional/google-api-services-cloudresourcemanager-v1-rev502-1.25.0.jar"/>
+        <pathelement location="lib/additional/google-api-services-oauth2-v2-rev141-1.25.0.jar"/>
+        <pathelement location="lib/additional/gson-2.1.jar"/>
+        <pathelement location="lib/additional/jackson-core-2.9.6.jar"/>
+        <pathelement location="lib/additional/jetty-6.1.26.jar"/>
+        <pathelement location="lib/additional/jetty-util-6.1.26.jar"/>
+        <pathelement location="lib/additional/servlet-api-2.5-20081211.jar"/>
+        <pathelement location="jgoodies-forms-1.8.0.jar"/>
+    </path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir=".">
+                <include name="apple/**"/>
+                <include name="com/**"/>
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+                <exclude name="com/pixelmed/test/**"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean,init" name="build">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}" encoding="iso-8859-1">
+            <src path="."/>
+            <include name="apple/**"/>
+            <include name="com/**"/>
+            <exclude name="com/pixelmed/test/**"/>
+            <classpath refid="dicomcleaner.classpath"/>
+        </javac>
+    </target>
+
+    <property name="dir.buildfile" value="."/>
+    <property name="dir.workspace" value="."/>
+    <property name="dir.jarfile" value="${dir.buildfile}/dist"/>
+    <target depends="build" name="dist">
+        <jar destfile="${dir.jarfile}/dicomCleaner.jar">
+            <manifest>
+                <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
+                <attribute name="Rsrc-Main-Class" value="com.pixelmed.display.DicomCleaner"/>
+                <attribute name="Class-Path" value="."/>
+                <attribute name="Rsrc-Class-Path" value="./ aiviewer.jar commons-codec-1.3.jar commons-compress-1.12.jar commons-net-ftp-2.0.jar hsqldb.jar javax.json-1.0.4.jar javax.json-api-1.0.jar jmdns.jar pixelmed_codec.jar pixelmed_imageio.jar vecmath1.2-1.14.jar junit-4.8.1.jar slf4j-simple-1.7.25.jar slf4j-api-1.7.25.jar google-oauth-client-1.25.0.jar google-oauth-client-java6-1.25.0.jar google-oauth-client-jetty-1.25.0.jar google-api-client-1.25.0.jar google-http-client-1.25.0.jar google-http-client-jackson2-1.25.0.jar google-api-services-cloudresourcemanager-v1-rev502-1.25.0.jar google-api-services-oauth2-v2-rev141-1.25.0.jar gson-2.1.jar jackson-core-2.9.6.jar jetty-6.1.26.jar jetty-util-6.1.26.jar servlet-api-2.5-20081211.jar jgoodies-forms-1.8.0.jar"/>
+            </manifest>
+            <zipfileset src="jar-in-jar-loader.zip"/>
+            <fileset dir="${dir.buildfile}/bin"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="aiviewer.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="commons-codec-1.3.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="commons-compress-1.12.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="commons-net-ftp-2.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="hsqldb.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="javax.json-1.0.4.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="javax.json-api-1.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="jmdns.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="pixelmed_codec.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="pixelmed_imageio.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="vecmath1.2-1.14.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/junit" includes="junit-4.8.1.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="slf4j-simple-1.7.25.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="slf4j-api-1.7.25.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-oauth-client-1.25.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-oauth-client-java6-1.25.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-oauth-client-jetty-1.25.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-api-client-1.25.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-http-client-1.25.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-http-client-jackson2-1.25.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-api-services-cloudresourcemanager-v1-rev502-1.25.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-api-services-oauth2-v2-rev141-1.25.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="gson-2.1.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="jackson-core-2.9.6.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="jetty-6.1.26.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="jetty-util-6.1.26.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="servlet-api-2.5-20081211.jar"/>
+            <zipfileset dir="${dir.buildfile}" includes="jgoodies-forms-1.8.0.jar"/>
+        </jar>
+    </target>
+</project>
