@@ -99,7 +99,7 @@ public class GoogleAPIClient {
     private static Credential authorize() throws Exception {
         // load client secrets
         clientSecrets = GoogleClientSecrets.load(JSON_FACTORY,
-                new InputStreamReader(new FileInputStream("client_secrets.json")));
+                new InputStreamReader(GoogleAPIClient.class.getResourceAsStream("/client_secrets.json")));
         if (clientSecrets.getDetails().getClientId().startsWith("Enter")
                 || clientSecrets.getDetails().getClientSecret().startsWith("Enter ")) {
             System.out.println("Enter Client ID and Secret from https://code.google.com/apis/console/ "
