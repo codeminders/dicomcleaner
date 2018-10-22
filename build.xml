@@ -49,6 +49,7 @@
     </target>
     <target name="clean">
         <delete dir="bin"/>
+        <delete dir="demo-server/src/main/resources/public/dicomcleaner" />
     </target>
     <target depends="clean,init" name="build">
         <echo message="${ant.project.name}: ${ant.file}"/>
@@ -74,6 +75,7 @@
             </manifest>
             <zipfileset src="jar-in-jar-loader.zip"/>
             <fileset dir="${dir.buildfile}/bin"/>
+            <file name="${dir.buildfile}/client_secrets.json" />
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="aiviewer.jar"/>
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="commons-codec-1.3.jar"/>
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="commons-compress-1.12.jar"/>
@@ -103,5 +105,19 @@
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="servlet-api-2.5-20081211.jar"/>
             <zipfileset dir="${dir.buildfile}" includes="jgoodies-forms-1.8.0.jar"/>
         </jar>
+    </target>
+
+    <property environment="env"/>
+    <property name="dir.signedjar" value="${dir.buildfile}/demo-server/src/main/resources/public/dicomcleaner"/>
+    <target depends="dist" name="sign">
+        <mkdir dir="${dir.signedjar}" />
+        <signjar destDir="${dir.signedjar}"
+                 alias="${env.CERT_ALIAS}" keystore="${env.CERT_KEYSTORE}"
+                 storepass="${env.CERT_PASS}"
+                 preservelastmodified="true">
+            <path>
+                <pathelement location="${dir.jarfile}/dicomCleaner.jar"/>
+            </path>
+        </signjar>
     </target>
 </project>
