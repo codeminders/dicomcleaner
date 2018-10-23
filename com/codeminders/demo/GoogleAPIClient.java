@@ -1,6 +1,5 @@
 package com.codeminders.demo;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -18,6 +17,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.EmptyContent;
+import com.google.api.client.http.FileContent;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpHeaders;
@@ -31,6 +31,8 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.cloudresourcemanager.CloudResourceManager;
 import com.google.api.services.cloudresourcemanager.model.ListProjectsResponse;
 import com.google.api.services.cloudresourcemanager.model.Project;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.model.File;
 import com.google.api.services.oauth2.Oauth2;
 import com.google.api.services.oauth2.model.Tokeninfo;
 import com.google.gson.JsonArray;
@@ -51,7 +53,7 @@ public class GoogleAPIClient {
     /**
      * Directory to store user credentials.
      */
-    private static final java.io.File DATA_STORE_DIR = new java.io.File(System.getProperty("user.home"), ".store/google_dicom_cleaner_auth");
+    private static final java.io.File DATA_STORE_DIR = new java.io.File(System.getProperty("user.home"), ".store/google_dicom_cleaner_auth_with_drive");
 
     /**
      * Global instance of the {@link DataStoreFactory}. The best practice is to make
@@ -76,7 +78,11 @@ public class GoogleAPIClient {
             "https://www.googleapis.com/auth/cloud-healthcare",
             "https://www.googleapis.com/auth/cloud-platform",
             "https://www.googleapis.com/auth/userinfo.profile",
-            "https://www.googleapis.com/auth/userinfo.email");
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/drive",
+            "https://www.googleapis.com/auth/drive.appdata",
+            "https://www.googleapis.com/auth/drive.apps.readonly",
+            "https://www.googleapis.com/auth/drive.file");
 
     private static Oauth2 oauth2;
     private static GoogleClientSecrets clientSecrets;
@@ -85,6 +91,7 @@ public class GoogleAPIClient {
      * Instance of Google Cloud Resource Manager
      */
     private static CloudResourceManager cloudResourceManager;
+    private static Drive drive;
 
     private boolean isSignedIn = false;
     private String accessToken;
@@ -149,6 +156,8 @@ public class GoogleAPIClient {
 
                     cloudResourceManager = new CloudResourceManager.Builder(httpTransport, JSON_FACTORY, credential)
                             .build();
+                    drive = new Drive.Builder(httpTransport, JSON_FACTORY, credential).setApplicationName(APPLICATION_NAME)
+                    		.build();
                     accessToken = credential.getAccessToken();
                     System.out.println("Token:" + accessToken);
                     // run commands
@@ -331,4 +340,26 @@ public class GoogleAPIClient {
 		}
 	}
 	
+	public String exportStringAsGoogleDoc(String title, String description, String parentId, String filename) {
+		String result;
+		String mimeType = "text/html";
+		File body = new File();
+	    body.setName(title);
+	    body.setDescription(description);
+	    body.setMimeType(mimeType);
+	    if (parentId != null && parentId.length() > 0) {
+	    	body.setParents(Arrays.asList(parentId));
+	    }
+	    java.io.File fileContent = new java.io.File(filename);
+	    FileContent mediaContent = new FileContent(mimeType, fileContent);
+	    try {
+	      File file = drive.files().create(body, mediaContent).execute();
+	      logger.info("File ID: " + file.getId());
+	      result = "\"" + title + "\" with id:" + file.getId();
+	    } catch (IOException e) {
+	    	result = "An error occurred: " + e.getMessage();
+	    	logger.info(result, e);
+	    }
+	    return result;
+	}
 }

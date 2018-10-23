@@ -20,7 +20,7 @@ public class ReportService {
 	public enum Status { SUCCESS, FAIL };
 
 	public static final String REPORT_FILE = "report.html";
-	public static final String REPORT_FILE_FULL = "report.html";
+	public static final String REPORT_FILE_FULL = "report_full.html";
 	private static final Logger logger = LoggerFactory.getLogger(ReportService.class);
 
     private static ReportService instance;
@@ -39,7 +39,7 @@ public class ReportService {
     }
 
     private ReportService() {
-    	dumpReport("");
+    	dumpReport("", REPORT_FILE);
     }
     
     public void clear() {
@@ -76,6 +76,10 @@ public class ReportService {
     	dumpReport();
     }
 
+    public String getReportFile(boolean full) {
+		return full ? REPORT_FILE_FULL : REPORT_FILE;
+	}
+    
     public String loadReport() {
     	try {
     		return FileUtilities.readFile(new File(REPORT_FILE));
@@ -86,11 +90,12 @@ public class ReportService {
     }
     
     private void dumpReport() {
-    	dumpReport(generateReport(false));
+    	dumpReport(generateReport(false), REPORT_FILE);
+    	dumpReport(generateReport(true), REPORT_FILE_FULL);
     }
     
-    private void dumpReport(String data) {
-    	try (FileOutputStream fos = new FileOutputStream(REPORT_FILE)) {
+    private void dumpReport(String data, String filename) {
+    	try (FileOutputStream fos = new FileOutputStream(filename)) {
     		fos.write(data.getBytes());
     	} catch(Exception e) {
     		logger.error("Error writing report to file", e);
