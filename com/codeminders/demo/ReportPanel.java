@@ -4,32 +4,25 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ResourceBundle;
 
+import javax.swing.JButton;
 import javax.swing.JEditorPane;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.Timer;
 import javax.swing.text.DefaultCaret;
 
-public class ReportPanel extends JPanel implements ActionListener {
+public class ReportPanel extends JPanel {
 
 	private JEditorPane out;
 	private JScrollPane jsp;
 
-	private static ReportPanel panel;
-
 	public final static int INTERVAL = 1000;
-
-	public static synchronized ReportPanel getInstance() {
-		if (panel == null) {
-			panel = new ReportPanel();
-		}
-		return panel;
-	}
-
-	private ReportPanel() {
+	
+	public ReportPanel(ResourceBundle resourceBundle) {
 		super();
-
 		out = new JEditorPane();
 		out.setContentType("text/html");
 		JPanel bp = new JPanel();
@@ -46,11 +39,35 @@ public class ReportPanel extends JPanel implements ActionListener {
 
 		Timer timer = new Timer(INTERVAL, new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				panel.reload();
-				panel.revalidate();
+				ReportPanel.this.reload();
+				ReportPanel.this.revalidate();
 			}
 		});
 		timer.start();
+		
+		if (resourceBundle != null) {
+			JButton reportButton = new JButton(resourceBundle.getString("exportReportButtonLabelText"));
+			reportButton.setToolTipText(resourceBundle.getString("exportReportButtonToolTipText"));
+			add(reportButton, BorderLayout.SOUTH);
+			reportButton.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					try {
+						GoogleAPIClient client = GoogleAPIClientFactory.getInstance().getGoogleClient();
+						client.signIn();
+						String name = client.exportStringAsGoogleDoc(
+								"DICOM Cleaner Report", 
+								"DICOM Cleaner Report", 
+								// We can export full version of report using 'true' for parameter in getReportFile method
+								// and 'false' for short version
+								ReportService.getInstance().getReportFile(true));
+						JOptionPane.showMessageDialog(null, "Report exported to Google:" + name);
+					} catch(Exception ex) {
+						JOptionPane.showMessageDialog(null, "Error export to Google: " + ex.getMessage());
+					}
+				}
+			});
+		}
 	}
 
 	public void reload() {
@@ -60,11 +77,6 @@ public class ReportPanel extends JPanel implements ActionListener {
 			out.setText(report);
 			
 		}
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent arg0) {
-
 	}
 
 }

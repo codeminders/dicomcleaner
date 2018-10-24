@@ -1281,12 +1281,12 @@ slf4jlogger.info("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): epoc
 		public void actionPerformed(ActionEvent e) {
 			try {
 				JFrame frame = new JFrame();
-				ReportPanel reportPanel = ReportPanel.getInstance();
+				ReportPanel reportPanel = new ReportPanel(resourceBundle);
 				frame.add(reportPanel);
 				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 				frame.setVisible(true);
 				frame.setResizable(false);
-				frame.setSize(200, 550);
+				frame.setSize(200, 560);
 			} catch(Exception ex) {
 				logger.send("Error during report building:" + ex.getMessage());
 				JOptionPane.showMessageDialog(null, "Error during report building:" + ex.getMessage());

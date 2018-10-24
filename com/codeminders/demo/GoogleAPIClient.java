@@ -1,10 +1,11 @@
 package com.codeminders.demo;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -18,6 +19,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.EmptyContent;
+import com.google.api.client.http.FileContent;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpHeaders;
@@ -31,6 +33,9 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.cloudresourcemanager.CloudResourceManager;
 import com.google.api.services.cloudresourcemanager.model.ListProjectsResponse;
 import com.google.api.services.cloudresourcemanager.model.Project;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
 import com.google.api.services.oauth2.Oauth2;
 import com.google.api.services.oauth2.model.Tokeninfo;
 import com.google.gson.JsonArray;
@@ -48,10 +53,12 @@ public class GoogleAPIClient {
      */
     private static final String APPLICATION_NAME = "Codeminders-DicomCleanerDEMO/1.0";
 
+    private static final String GDRIVE_REPORT_FOLDER_NAME = "De-id";
+    
     /**
      * Directory to store user credentials.
      */
-    private static final java.io.File DATA_STORE_DIR = new java.io.File(System.getProperty("user.home"), ".store/google_dicom_cleaner_auth");
+    private static final java.io.File DATA_STORE_DIR = new java.io.File(System.getProperty("user.home"), ".store/google_dicom_cleaner_auth_with_drive");
 
     /**
      * Global instance of the {@link DataStoreFactory}. The best practice is to make
@@ -76,7 +83,11 @@ public class GoogleAPIClient {
             "https://www.googleapis.com/auth/cloud-healthcare",
             "https://www.googleapis.com/auth/cloud-platform",
             "https://www.googleapis.com/auth/userinfo.profile",
-            "https://www.googleapis.com/auth/userinfo.email");
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/drive",
+            "https://www.googleapis.com/auth/drive.appdata",
+            "https://www.googleapis.com/auth/drive.apps.readonly",
+            "https://www.googleapis.com/auth/drive.file");
 
     private static Oauth2 oauth2;
     private static GoogleClientSecrets clientSecrets;
@@ -85,6 +96,7 @@ public class GoogleAPIClient {
      * Instance of Google Cloud Resource Manager
      */
     private static CloudResourceManager cloudResourceManager;
+    private static Drive drive;
 
     private boolean isSignedIn = false;
     private String accessToken;
@@ -92,6 +104,8 @@ public class GoogleAPIClient {
     private List<GoogleAuthListener> listeners = new ArrayList<>();
     
     private GoogleApplicationEntity applicationEntity = new GoogleApplicationEntity("Google Health Care");
+    
+    private SimpleDateFormat timeFormatter = new SimpleDateFormat("yyyyMMdd_HHmm");
     
     protected GoogleAPIClient() {
     }
@@ -149,6 +163,8 @@ public class GoogleAPIClient {
 
                     cloudResourceManager = new CloudResourceManager.Builder(httpTransport, JSON_FACTORY, credential)
                             .build();
+                    drive = new Drive.Builder(httpTransport, JSON_FACTORY, credential).setApplicationName(APPLICATION_NAME)
+                    		.build();
                     accessToken = credential.getAccessToken();
                     System.out.println("Token:" + accessToken);
                     // run commands
@@ -330,5 +346,58 @@ public class GoogleAPIClient {
 			logger.info("DICOM store created: " + dicomStorePath);
 		}
 	}
+
+	private String findFolder(String folderName) throws IOException {
+		FileList result = drive.files().list()
+			.setQ("mimeType = 'application/vnd.google-apps.folder' and name = 'De-id'")
+			.setSpaces("drive")
+			.execute();
+		if (result.getFiles().isEmpty()) {
+			return null;
+		}
+		return result.getFiles().get(0).getId();
+	}
 	
+	private String getParentFolder(String folderName) throws IOException {
+		String folderId = findFolder(folderName);
+		if (folderId == null) {
+			String mimeType = "application/vnd.google-apps.folder";
+			File body = new File();
+			body.setName(folderName);
+			body.setMimeType(mimeType);
+			File file = drive.files().create(body)
+			  	.setFields("id")
+			  	.execute();
+			folderId = file.getId();
+			logger.info("Folder ID: " + folderId);
+		}
+		return folderId;
+	}
+	
+	public String exportStringAsGoogleDoc(String title, String description, String localFilename) {
+		if (!isSignedIn()) {
+			throw new IllegalStateException("User not authorized in Google cloud");
+		}
+		String result;
+	    try {
+	    	String reportFilename = title + "_" + timeFormatter.format(new Date());
+			String mimeType = "text/html";
+			String parentId = getParentFolder(GDRIVE_REPORT_FOLDER_NAME);
+			File body = new File();
+		    body.setName(reportFilename);
+		    body.setDescription(description);
+		    body.setMimeType(mimeType);
+		    if (parentId != null && parentId.length() > 0) {
+		    	body.setParents(Arrays.asList(parentId));
+		    }
+		    FileContent mediaContent = new FileContent(mimeType, new java.io.File(localFilename));
+		    File file = drive.files().create(body, mediaContent).execute();
+		    logger.info("File ID: " + file.getId());
+		    result = "\"\\" + GDRIVE_REPORT_FOLDER_NAME + "\\" + reportFilename + "\" with id: " + file.getId();
+	    } catch (IOException e) {
+	    	result = "An error occurred: " + e.getMessage();
+	    	logger.info(result, e);
+	    }
+	    return result;
+	}
 }
