@@ -2,8 +2,10 @@ package com.codeminders.demo;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -33,6 +35,7 @@ import com.google.api.services.cloudresourcemanager.model.ListProjectsResponse;
 import com.google.api.services.cloudresourcemanager.model.Project;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
 import com.google.api.services.oauth2.Oauth2;
 import com.google.api.services.oauth2.model.Tokeninfo;
 import com.google.gson.JsonArray;
@@ -50,6 +53,8 @@ public class GoogleAPIClient {
      */
     private static final String APPLICATION_NAME = "Codeminders-DicomCleanerDEMO/1.0";
 
+    private static final String GDRIVE_REPORT_FOLDER_NAME = "De-id";
+    
     /**
      * Directory to store user credentials.
      */
@@ -99,6 +104,8 @@ public class GoogleAPIClient {
     private List<GoogleAuthListener> listeners = new ArrayList<>();
     
     private GoogleApplicationEntity applicationEntity = new GoogleApplicationEntity("Google Health Care");
+    
+    private SimpleDateFormat timeFormatter = new SimpleDateFormat("yyyyMMdd_HHmm");
     
     protected GoogleAPIClient() {
     }
@@ -339,23 +346,54 @@ public class GoogleAPIClient {
 			logger.info("DICOM store created: " + dicomStorePath);
 		}
 	}
+
+	private String findFolder(String folderName) throws IOException {
+		FileList result = drive.files().list()
+			.setQ("mimeType = 'application/vnd.google-apps.folder' and name = 'De-id'")
+			.setSpaces("drive")
+			.execute();
+		if (result.getFiles().isEmpty()) {
+			return null;
+		}
+		return result.getFiles().get(0).getId();
+	}
 	
-	public String exportStringAsGoogleDoc(String title, String description, String parentId, String filename) {
+	private String getParentFolder(String folderName) throws IOException {
+		String folderId = findFolder(folderName);
+		if (folderId == null) {
+			String mimeType = "application/vnd.google-apps.folder";
+			File body = new File();
+			body.setName(folderName);
+			body.setMimeType(mimeType);
+			File file = drive.files().create(body)
+			  	.setFields("id")
+			  	.execute();
+			folderId = file.getId();
+			logger.info("Folder ID: " + folderId);
+		}
+		return folderId;
+	}
+	
+	public String exportStringAsGoogleDoc(String title, String description, String localFilename) {
+		if (!isSignedIn()) {
+			throw new IllegalStateException("User not authorized in Google cloud");
+		}
 		String result;
-		String mimeType = "text/html";
-		File body = new File();
-	    body.setName(title);
-	    body.setDescription(description);
-	    body.setMimeType(mimeType);
-	    if (parentId != null && parentId.length() > 0) {
-	    	body.setParents(Arrays.asList(parentId));
-	    }
-	    java.io.File fileContent = new java.io.File(filename);
-	    FileContent mediaContent = new FileContent(mimeType, fileContent);
 	    try {
-	      File file = drive.files().create(body, mediaContent).execute();
-	      logger.info("File ID: " + file.getId());
-	      result = "\"" + title + "\" with id:" + file.getId();
+	    	String reportFilename = title + "_" + timeFormatter.format(new Date());
+			String mimeType = "text/html";
+			String parentId = getParentFolder(GDRIVE_REPORT_FOLDER_NAME);
+			File body = new File();
+		    body.setName(reportFilename);
+		    body.setDescription(description);
+		    body.setMimeType(mimeType);
+		    if (parentId != null && parentId.length() > 0) {
+		    	body.setParents(Arrays.asList(parentId));
+		    }
+		    FileContent mediaContent = new FileContent(mimeType, new java.io.File(localFilename));
+		    File file = drive.files().create(body, mediaContent).execute();
+		    logger.info("File ID: " + file.getId());
+		    result = "\"\\" + GDRIVE_REPORT_FOLDER_NAME + "\\" + reportFilename + "\" with id: " + file.getId();
 	    } catch (IOException e) {
 	    	result = "An error occurred: " + e.getMessage();
 	    	logger.info(result, e);

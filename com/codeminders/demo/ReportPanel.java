@@ -52,13 +52,19 @@ public class ReportPanel extends JPanel {
 			reportButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					String name = GoogleAPIClientFactory.getInstance().getGoogleClient().exportStringAsGoogleDoc(
-							"DICOM Cleaner Report", 
-							"DICOM Cleaner Report", 
-							null, 
-							// We can export full version of report using 'true' for parameter in getReportFile method
-							ReportService.getInstance().getReportFile(false));
-					JOptionPane.showMessageDialog(null, "Report exported to Google:" + name);
+					try {
+						GoogleAPIClient client = GoogleAPIClientFactory.getInstance().getGoogleClient();
+						client.signIn();
+						String name = client.exportStringAsGoogleDoc(
+								"DICOM Cleaner Report", 
+								"DICOM Cleaner Report", 
+								// We can export full version of report using 'true' for parameter in getReportFile method
+								// and 'false' for short version
+								ReportService.getInstance().getReportFile(true));
+						JOptionPane.showMessageDialog(null, "Report exported to Google:" + name);
+					} catch(Exception ex) {
+						JOptionPane.showMessageDialog(null, "Error export to Google: " + ex.getMessage());
+					}
 				}
 			});
 		}

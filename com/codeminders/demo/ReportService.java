@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hsqldb.lib.FileUtil;
-
 import com.pixelmed.slf4j.Logger;
 import com.pixelmed.slf4j.LoggerFactory;
 import com.pixelmed.utils.FileUtilities;
@@ -39,7 +37,7 @@ public class ReportService {
     }
 
     private ReportService() {
-    	dumpReport("", REPORT_FILE);
+    	dumpReport();
     }
     
     public void clear() {
