@@ -2,9 +2,13 @@ package com.codeminders.demo;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -108,6 +112,20 @@ public class GoogleAPIClient {
     private SimpleDateFormat timeFormatter = new SimpleDateFormat("yyyyMMdd_HHmm");
     
     protected GoogleAPIClient() {
+    }
+    
+    public void cleanAuth() {
+    	if (!isSignedIn()) {
+    		try {
+        		Path rootPath = Paths.get(DATA_STORE_DIR.getAbsolutePath());     
+        		final List<Path> pathsToDelete = Files.walk(rootPath).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+        		for(Path path : pathsToDelete) {
+        		    Files.deleteIfExists(path);
+        		}
+    		} catch(Exception e) {
+    			logger.error("There is error during delteing directory", e);
+    		}
+    	}
     }
 
     private static Credential authorize() throws Exception {
