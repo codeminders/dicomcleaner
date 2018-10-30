@@ -1078,6 +1078,7 @@ slf4jlogger.info("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): epoc
 		public void actionPerformed(ActionEvent e) {
 			try {
 				GoogleAPIClient client = GoogleAPIClientFactory.getInstance().getGoogleClient();
+				client.cleanAuth();
 				client.signIn();
 				JFrame frame = new JFrame();
 				GoogleDicomstoreSelector googleChooser = new GoogleDicomstoreSelector(frame, DicomCleaner.this, false);
