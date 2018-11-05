@@ -14,8 +14,6 @@ import javax.swing.JScrollPane;
 import javax.swing.Timer;
 import javax.swing.text.DefaultCaret;
 
-import com.pixelmed.display.DicomCleaner;
-
 public class ReportPanel extends JPanel {
 
 	private JEditorPane out;
@@ -26,6 +24,7 @@ public class ReportPanel extends JPanel {
 	public ReportPanel(ResourceBundle resourceBundle, String googleSecretPath) {
 		super();
 		out = new JEditorPane();
+		out.setEditable(false);
 		out.setContentType("text/html");
 		JPanel bp = new JPanel();
 		bp.add(out, BorderLayout.CENTER);
@@ -73,7 +72,7 @@ public class ReportPanel extends JPanel {
 	}
 
 	public void reload() {
-		String report = ReportService.getInstance().loadReport();
+		String report = ReportService.getInstance().generateReport(false);
 		String prevRep = out.getText();
 		if (!report.equals(prevRep)) {
 			out.setText(report);

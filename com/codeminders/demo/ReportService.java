@@ -100,7 +100,7 @@ public class ReportService {
     	}
     }
     
-    private String generateReport(boolean fullReport) {
+    public String generateReport(boolean fullReport) {
     	ByteArrayOutputStream os = new ByteArrayOutputStream();
     	PrintStream ps = new PrintStream(os);
     	
