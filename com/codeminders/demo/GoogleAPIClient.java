@@ -111,7 +111,10 @@ public class GoogleAPIClient {
     
     private SimpleDateFormat timeFormatter = new SimpleDateFormat("yyyyMMdd_HHmm");
     
-    protected GoogleAPIClient() {
+    private String googleSecretPath;
+    
+    protected GoogleAPIClient(String googleSecretPath) {
+    	this.googleSecretPath = googleSecretPath;
     }
     
     public void cleanAuth() {
@@ -128,10 +131,10 @@ public class GoogleAPIClient {
     	}
     }
 
-    private static Credential authorize() throws Exception {
+    private Credential authorize() throws Exception {
         // load client secrets
-        clientSecrets = GoogleClientSecrets.load(JSON_FACTORY,
-                new InputStreamReader(GoogleAPIClient.class.getResourceAsStream("/client_secrets.json")));
+    	Path secrets = Paths.get(googleSecretPath).toAbsolutePath();
+        clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(Files.newInputStream(secrets)));
         if (clientSecrets.getDetails().getClientId().startsWith("Enter")
                 || clientSecrets.getDetails().getClientSecret().startsWith("Enter ")) {
             System.out.println("Enter Client ID and Secret from https://code.google.com/apis/console/ "

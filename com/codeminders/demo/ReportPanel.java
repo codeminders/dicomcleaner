@@ -14,6 +14,8 @@ import javax.swing.JScrollPane;
 import javax.swing.Timer;
 import javax.swing.text.DefaultCaret;
 
+import com.pixelmed.display.DicomCleaner;
+
 public class ReportPanel extends JPanel {
 
 	private JEditorPane out;
@@ -21,7 +23,7 @@ public class ReportPanel extends JPanel {
 
 	public final static int INTERVAL = 1000;
 	
-	public ReportPanel(ResourceBundle resourceBundle) {
+	public ReportPanel(ResourceBundle resourceBundle, String googleSecretPath) {
 		super();
 		out = new JEditorPane();
 		out.setContentType("text/html");
@@ -53,7 +55,7 @@ public class ReportPanel extends JPanel {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					try {
-						GoogleAPIClient client = GoogleAPIClientFactory.getInstance().getGoogleClient();
+						GoogleAPIClient client = GoogleAPIClientFactory.getInstance().getGoogleClient(googleSecretPath);
 						client.signIn();
 						String name = client.exportStringAsGoogleDoc(
 								"DICOM Cleaner Report", 

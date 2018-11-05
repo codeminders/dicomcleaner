@@ -13,9 +13,9 @@ public class GoogleAPIClientFactory {
         return instance;
     }
 
-    public GoogleAPIClient getGoogleClient() {
+    public GoogleAPIClient getGoogleClient(String googleSecretPath) {
         if (googleAPIClient == null) {
-            googleAPIClient = new GoogleAPIClient();
+            googleAPIClient = new GoogleAPIClient(googleSecretPath);
         }
         return googleAPIClient;
     }

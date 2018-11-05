@@ -183,6 +183,8 @@ public class DicomCleaner extends ApplicationFrame {
 	private static final String identString = "@(#) $Header: /userland/cvs/pixelmed/imgbook/com/pixelmed/display/DicomCleaner.java,v 1.91 2018/02/09 15:35:23 dclunie Exp $";
 
 	private static final Logger slf4jlogger = LoggerFactory.getLogger(DicomCleaner.class);
+	
+	private static final String GOOGLE_SECRET_DEFAULT_PATH = "client_secrets.json";
 
 	protected static String resourceBundleName  = "com.pixelmed.display.DicomCleaner";
 	protected static String propertiesFileName  = ".com.pixelmed.display.DicomCleaner.properties";
@@ -348,6 +350,10 @@ public class DicomCleaner extends ApplicationFrame {
 	protected String currentRemoteQuerySelectionLevel;
 
 	protected String ourCalledAETitle;		// set when reading network properties; used not just in StorageSCP, but also when creating exported meta information headers
+	
+	protected String clientSecretFile;
+	
+	private String googleSecretPath;
 	
 	public SafeProgressBarUpdaterThread getProgressBarUpdater() {
 		return progressBarUpdater;
@@ -1077,7 +1083,7 @@ slf4jlogger.info("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): epoc
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				GoogleAPIClient client = GoogleAPIClientFactory.getInstance().getGoogleClient();
+				GoogleAPIClient client = GoogleAPIClientFactory.getInstance().getGoogleClient(getGoogleSecretPath());
 				client.cleanAuth();
 				client.signIn();
 				JFrame frame = new JFrame();
@@ -1237,7 +1243,7 @@ slf4jlogger.info("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): epoc
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				GoogleAPIClient client = GoogleAPIClientFactory.getInstance().getGoogleClient();
+				GoogleAPIClient client = GoogleAPIClientFactory.getInstance().getGoogleClient(getGoogleSecretPath());
 				client.signIn();
 				JFrame frame = new JFrame();
 				GoogleDicomstoreSelector googleChooser = new GoogleDicomstoreSelector(frame, DicomCleaner.this, true);
@@ -1282,7 +1288,7 @@ slf4jlogger.info("DicomCleaner.copyFromOriginalToCleanedPerformingAction(): epoc
 		public void actionPerformed(ActionEvent e) {
 			try {
 				JFrame frame = new JFrame();
-				ReportPanel reportPanel = new ReportPanel(resourceBundle);
+				ReportPanel reportPanel = new ReportPanel(resourceBundle, googleSecretPath);
 				frame.add(reportPanel);
 				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 				frame.setVisible(true);
@@ -1820,10 +1826,10 @@ slf4jlogger.info("DicomCleaner.setCurrentRemoteQuerySelection(): Guessed missing
 	}
 	
 	public DicomCleaner() throws DicomException, IOException {
-		this(null/*pathName*/);
+		this(null/*pathName*/, GOOGLE_SECRET_DEFAULT_PATH);
 	}
 	
-	public DicomCleaner(String pathName) throws DicomException, IOException {
+	public DicomCleaner(String pathName, String googleSecretPath) throws DicomException, IOException {
 		super(null,propertiesFileName);
 System.err.println("default Locale="+Locale.getDefault());
 		
@@ -2305,7 +2311,7 @@ System.err.println("properties="+properties);
 			new Thread(new ImportWorker(pathName,srcDatabase,srcDatabasePanel)).start();
 		}
 		
-		
+		this.googleSecretPath = googleSecretPath;
 	}
 
 	/**
@@ -2313,16 +2319,30 @@ System.err.println("properties="+properties);
 	 *
 	 * @param	arg	optionally, a single path to a DICOM file or folder to search for importable DICOM files
 	 */
-	public static void main(String arg[]) {
+	public static void main(String args[]) {
 		try {
 			String pathName = null;
-			if (arg.length > 0) {
-				pathName = arg[0];
+			String googleSecretPath = null;
+			if (args.length > 0) {
+				for (String argi : args) {
+					if (argi.startsWith("-gcs=")) {
+						googleSecretPath = argi.split("=")[1];
+					} else {
+						pathName = argi;
+					}
+				}
 			}
-			new DicomCleaner(pathName);
+			if (googleSecretPath == null) {
+				googleSecretPath = GOOGLE_SECRET_DEFAULT_PATH;
+			}
+			new DicomCleaner(pathName, googleSecretPath);
 		}
 		catch (Exception e) {
 			e.printStackTrace(System.err);	// no need to use SLF4J since command line utility/test
 		}
+	}
+	
+	public String getGoogleSecretPath() {
+		return googleSecretPath;
 	}
 }
