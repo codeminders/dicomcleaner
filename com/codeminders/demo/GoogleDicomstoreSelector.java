@@ -53,7 +53,7 @@ public class GoogleDicomstoreSelector extends JPanel {
 		this.dicomCleaner = dicomCleaner;
 		this.parent = frame;
 		this.isNewDicomStore = isNewDicomStore;
-		googleAPIClient = GoogleAPIClientFactory.getInstance().getGoogleClient();
+		googleAPIClient = GoogleAPIClientFactory.getInstance().getGoogleClient(dicomCleaner.getGoogleSecretPath());
 		initComponents();
 	}
 	

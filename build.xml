@@ -27,6 +27,7 @@
         <pathelement location="lib/additional/google-http-client-1.25.0.jar"/>
         <pathelement location="lib/additional/google-http-client-jackson2-1.25.0.jar"/>
         <pathelement location="lib/additional/google-api-services-cloudresourcemanager-v1-rev502-1.25.0.jar"/>
+        <pathelement location="lib/additional/google-api-services-drive-v3-rev135-1.25.0.jar"/>
         <pathelement location="lib/additional/google-api-services-oauth2-v2-rev141-1.25.0.jar"/>
         <pathelement location="lib/additional/gson-2.1.jar"/>
         <pathelement location="lib/additional/jackson-core-2.9.6.jar"/>
@@ -49,6 +50,7 @@
     </target>
     <target name="clean">
         <delete dir="bin"/>
+        <delete dir="demo-server/src/main/resources/public/dicomcleaner" />
     </target>
     <target depends="clean,init" name="build">
         <echo message="${ant.project.name}: ${ant.file}"/>
@@ -70,10 +72,11 @@
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
                 <attribute name="Rsrc-Main-Class" value="com.pixelmed.display.DicomCleaner"/>
                 <attribute name="Class-Path" value="."/>
-                <attribute name="Rsrc-Class-Path" value="./ aiviewer.jar commons-codec-1.3.jar commons-compress-1.12.jar commons-net-ftp-2.0.jar hsqldb.jar javax.json-1.0.4.jar javax.json-api-1.0.jar jmdns.jar pixelmed_codec.jar pixelmed_imageio.jar vecmath1.2-1.14.jar junit-4.8.1.jar slf4j-simple-1.7.25.jar slf4j-api-1.7.25.jar google-oauth-client-1.25.0.jar google-oauth-client-java6-1.25.0.jar google-oauth-client-jetty-1.25.0.jar google-api-client-1.25.0.jar google-http-client-1.25.0.jar google-http-client-jackson2-1.25.0.jar google-api-services-cloudresourcemanager-v1-rev502-1.25.0.jar google-api-services-oauth2-v2-rev141-1.25.0.jar gson-2.1.jar jackson-core-2.9.6.jar jetty-6.1.26.jar jetty-util-6.1.26.jar servlet-api-2.5-20081211.jar jgoodies-forms-1.8.0.jar"/>
+                <attribute name="Rsrc-Class-Path" value="./ aiviewer.jar commons-codec-1.3.jar commons-compress-1.12.jar commons-net-ftp-2.0.jar hsqldb.jar javax.json-1.0.4.jar javax.json-api-1.0.jar jmdns.jar pixelmed_codec.jar pixelmed_imageio.jar vecmath1.2-1.14.jar junit-4.8.1.jar slf4j-simple-1.7.25.jar slf4j-api-1.7.25.jar google-oauth-client-1.25.0.jar google-oauth-client-java6-1.25.0.jar google-oauth-client-jetty-1.25.0.jar google-api-client-1.25.0.jar google-http-client-1.25.0.jar google-http-client-jackson2-1.25.0.jar google-api-services-cloudresourcemanager-v1-rev502-1.25.0.jar google-api-services-drive-v3-rev135-1.25.0.jar google-api-services-oauth2-v2-rev141-1.25.0.jar gson-2.1.jar jackson-core-2.9.6.jar jetty-6.1.26.jar jetty-util-6.1.26.jar servlet-api-2.5-20081211.jar jgoodies-forms-1.8.0.jar"/>
             </manifest>
             <zipfileset src="jar-in-jar-loader.zip"/>
             <fileset dir="${dir.buildfile}/bin"/>
+            <file name="${dir.buildfile}/client_secrets.json" />
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="aiviewer.jar"/>
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="commons-codec-1.3.jar"/>
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="commons-compress-1.12.jar"/>
@@ -95,6 +98,7 @@
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-http-client-1.25.0.jar"/>
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-http-client-jackson2-1.25.0.jar"/>
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-api-services-cloudresourcemanager-v1-rev502-1.25.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-api-services-drive-v3-rev135-1.25.0.jar"/>
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="google-api-services-oauth2-v2-rev141-1.25.0.jar"/>
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="gson-2.1.jar"/>
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="jackson-core-2.9.6.jar"/>
@@ -103,5 +107,19 @@
             <zipfileset dir="${dir.buildfile}/lib/additional" includes="servlet-api-2.5-20081211.jar"/>
             <zipfileset dir="${dir.buildfile}" includes="jgoodies-forms-1.8.0.jar"/>
         </jar>
+    </target>
+
+    <property environment="env"/>
+    <property name="dir.signedjar" value="${dir.buildfile}/demo-server/src/main/resources/public/dicomcleaner"/>
+    <target depends="dist" name="sign">
+        <mkdir dir="${dir.signedjar}" />
+        <signjar destDir="${dir.signedjar}"
+                 alias="${env.CERT_ALIAS}" keystore="${env.CERT_KEYSTORE}"
+                 storepass="${env.CERT_PASS}"
+                 preservelastmodified="true">
+            <path>
+                <pathelement location="${dir.jarfile}/dicomCleaner.jar"/>
+            </path>
+        </signjar>
     </target>
 </project>
